@@ -176,7 +176,7 @@ public class RetrievalEvaluator extends CasConsumer_ImplBase {
 		Iterator<Integer> it = qSet.iterator();
 		while (it.hasNext()) {
 			int key = it.next();
-			System.out.println(key);
+			//System.out.println(key);
 			List<Storage> temp1 = questionmap.get(key);
 			for (Storage tmp : temp1) {
 				double[] cosSim = new double[temp1.size()];
