@@ -38,7 +38,6 @@ extends JCasAnnotator_ImplBase  {
 		//Setting relevance value
 		doc.setRelevanceValue(rel);
 		doc.addToIndexes();
-		
 		//Adding populated FeatureStructure to CAS
 		jcas.addFsToIndexes(doc);
 	}

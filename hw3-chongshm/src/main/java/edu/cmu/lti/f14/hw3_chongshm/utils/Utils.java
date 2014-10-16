@@ -15,15 +15,19 @@ import org.apache.uima.jcas.cas.TOP;
 import org.apache.uima.jcas.tcas.Annotation;
 import org.uimafit.util.JCasUtil;
 
+import edu.cmu.lti.f14.hw3_chongshm.typesystems.Token;
+
 public class Utils {
 	public static <T extends TOP> ArrayList<T> fromFSListToCollection(FSList list,
 			Class<T> classType) {
 
 	
 		Collection<T> myCollection = JCasUtil.select(list, classType);
-		/*
-		 * for(T element:myCollection){ System.out.println(.getText()); }
-		 */
+		 for(T element:myCollection)
+		  { //System.out.println(.getText()); 
+			 
+		  }
+		 
 
 		return new ArrayList<T>(myCollection);
 	}
