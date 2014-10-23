@@ -132,10 +132,10 @@ public class RetrievalEvaluator extends CasConsumer_ImplBase {
 			}
 			if (doc.getRelevanceValue() == 1) {
 				List<Storage> info = new ArrayList<Storage>();
-				// double cosine_similarity =
-				// computeCosineSimilarity(queryVector,
-				// docVector);
-				double cosine_similarity = tversky(sentence, query);
+				 double cosine_similarity =
+				 computeCosineSimilarity(queryVector,
+				 docVector);
+				//double cosine_similarity = tversky(sentence, query);
 				Storage abc = new Storage(cos, ra, qid, rel, txt);
 				abc.setCosine(cosine_similarity);
 				abc.setRel(1);
@@ -147,10 +147,10 @@ public class RetrievalEvaluator extends CasConsumer_ImplBase {
 				questionmap.put(doc.getQueryID(), info);
 			} else if (doc.getRelevanceValue() != 99) {
 
-				// double cosine_similarity =
-				// computeCosineSimilarity(queryVector,
-				// docVector);
-				double cosine_similarity = tversky(sentence, query);
+				 double cosine_similarity =
+				 computeCosineSimilarity(queryVector,
+				 docVector);
+				//double cosine_similarity = tversky(sentence, query);
 				if (questionmap.containsKey(doc.getQueryID())) {
 					List<Storage> info = questionmap.get(doc.getQueryID());
 					Storage abc = new Storage(cos, ra, qid, rel, txt);
