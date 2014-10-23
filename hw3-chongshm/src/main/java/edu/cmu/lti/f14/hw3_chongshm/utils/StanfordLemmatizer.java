@@ -50,8 +50,8 @@ public class StanfordLemmatizer {
 	   * Some stupid test.
 	   */
 	  public static void main(String args[]) {
-	    String origText = "tested tester tested gone indices indices super_testers"
-	                    + "had having been was were would could might";
+	    String origText = "tested tester tested gone indices Indices super_testers"
+	                    + "had having been was were can could Might";
 	    
 	    System.out.println(stemText(origText));
 	    System.out.println("==================");

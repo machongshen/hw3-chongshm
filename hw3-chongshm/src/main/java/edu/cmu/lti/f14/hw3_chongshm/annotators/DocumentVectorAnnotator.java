@@ -20,6 +20,11 @@ import edu.cmu.lti.f14.hw3_chongshm.typesystems.Document;
 import edu.cmu.lti.f14.hw3_chongshm.typesystems.Token;
 import edu.cmu.lti.f14.hw3_chongshm.utils.Utils;
 
+/**
+ * This annotator is used for getting the token of the sentence and store it in
+ * the document.
+ * 
+ */
 public class DocumentVectorAnnotator extends JCasAnnotator_ImplBase {
 
 	@Override
@@ -57,32 +62,30 @@ public class DocumentVectorAnnotator extends JCasAnnotator_ImplBase {
 		// TO DO: construct a vector of tokens and update the tokenList in CAS
 		List<String> doctext = tokenize(docText);
 		Map<String, Integer> queryVector = new HashMap<String, Integer>();
-		Collection<Token> aCollection = new ArrayList<Token> ();
-		
-		
-		
-			for (String a : doctext) {
-				if (!queryVector.containsKey(a)) {
-					queryVector.put(a, 1);
-	
-				} else {
-					int x = queryVector.get(a);
-					x++;
-					queryVector.put(a, x);					
-					}
+		Collection<Token> aCollection = new ArrayList<Token>();
+
+		for (String a : doctext) {
+			if (!queryVector.containsKey(a)) {
+				queryVector.put(a, 1);
+
+			} else {
+				int x = queryVector.get(a);
+				x++;
+				queryVector.put(a, x);
 			}
+		}
 
 		FSList fs = new FSList(jcas);
-		Iterator <String> it= queryVector.keySet().iterator();
-		while (it.hasNext()) { 		
+		Iterator<String> it = queryVector.keySet().iterator();
+		while (it.hasNext()) {
 			Token b = new Token(jcas);
 			String key = it.next();
-		    b.setText(key);
+			b.setText(key);
 			b.setFrequency(queryVector.get(key));
 			aCollection.add(b);
-		} 
-		
-		fs = Utils.fromCollectionToFSList (jcas, aCollection);
+		}
+
+		fs = Utils.fromCollectionToFSList(jcas, aCollection);
 		doc.setTokenList(fs);
 	}
 
