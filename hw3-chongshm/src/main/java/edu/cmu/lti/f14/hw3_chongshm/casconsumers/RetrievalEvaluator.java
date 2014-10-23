@@ -1,7 +1,9 @@
 package edu.cmu.lti.f14.hw3_chongshm.casconsumers;
 
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.*;
@@ -19,18 +21,23 @@ import org.apache.uima.util.ProcessTrace;
 import edu.cmu.lti.f14.hw3_chongshm.typesystems.Document;
 import edu.cmu.lti.f14.hw3_chongshm.typesystems.Info;
 import edu.cmu.lti.f14.hw3_chongshm.typesystems.Token;
+import edu.cmu.lti.f14.hw3_chongshm.utils.StanfordLemmatizer;
 import edu.cmu.lti.f14.hw3_chongshm.utils.Utils;
+import edu.cmu.lti.f14.hw3_chongshm.casconsumers.Storage;
 
 public class RetrievalEvaluator extends CasConsumer_ImplBase {
 	/**
-	 * Description: A CasConsumer that generate the consumer. By using the equation provided in the pdf,
-	 * I realized the function which could calculate the cosine-similarity. In addition, I also wrote the 
-	 * function to calculate Jaccard coefficient and Tversky coefficient. 
+	 * Description: A CasConsumer that generate the consumer. By using the
+	 * equation provided in the pdf, I realized the function which could
+	 * calculate the cosine-similarity. In addition, I also wrote the function
+	 * to calculate Jaccard coefficient and Tversky coefficient.
 	 * 
 	 * @author machongshen
 	 * 
 	 */
+	public static final String PARAM_INPUTDIR = "./src/main/resources/stopwords.txt";
 
+	private ArrayList<String> stopwords;
 	/** query id number **/
 	public ArrayList<Integer> qIdList;
 	/** query and text relevant values **/
@@ -48,6 +55,7 @@ public class RetrievalEvaluator extends CasConsumer_ImplBase {
 	public static final String PARAM_OUTPUTDIR = "./report.txt";
 	public String query = null;
 	public String sentence = null;
+
 	/**
 	 * Description: Name of configuration parameter that must be set to the path
 	 * of a directory containing input files.
@@ -67,6 +75,13 @@ public class RetrievalEvaluator extends CasConsumer_ImplBase {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		String stopword = (PARAM_INPUTDIR).trim();
+
+		try {
+			// System.out.println("good");
+			stopwords = linereadfile(stopword);
+		} catch (Exception e) {
+		}
 		qIdList = new ArrayList<Integer>();
 
 		relList = new ArrayList<Integer>();
@@ -74,9 +89,8 @@ public class RetrievalEvaluator extends CasConsumer_ImplBase {
 	}
 
 	/**
-	 * 1. construct the global word Map 2. keep the word frequency for
-	 * each sentence
-	 * Compute Cosine Similarity, store the result in hashmap.
+	 * 1. construct the global word Map 2. keep the word frequency for each
+	 * sentence Compute Cosine Similarity, store the result in hashmap.
 	 */
 	@Override
 	public void processCas(CAS aCas) throws ResourceProcessException {
@@ -118,10 +132,10 @@ public class RetrievalEvaluator extends CasConsumer_ImplBase {
 			}
 			if (doc.getRelevanceValue() == 1) {
 				List<Storage> info = new ArrayList<Storage>();
-				 double cosine_similarity =
-				 computeCosineSimilarity(queryVector,
-				 docVector);
-				//double cosine_similarity = dice(sentence, query);
+				// double cosine_similarity =
+				// computeCosineSimilarity(queryVector,
+				// docVector);
+				double cosine_similarity = tversky(sentence, query);
 				Storage abc = new Storage(cos, ra, qid, rel, txt);
 				abc.setCosine(cosine_similarity);
 				abc.setRel(1);
@@ -133,10 +147,10 @@ public class RetrievalEvaluator extends CasConsumer_ImplBase {
 				questionmap.put(doc.getQueryID(), info);
 			} else if (doc.getRelevanceValue() != 99) {
 
-				 double cosine_similarity =
-				 computeCosineSimilarity(queryVector,
-				 docVector);
-				//double cosine_similarity = dice(sentence, query);
+				// double cosine_similarity =
+				// computeCosineSimilarity(queryVector,
+				// docVector);
+				double cosine_similarity = tversky(sentence, query);
 				if (questionmap.containsKey(doc.getQueryID())) {
 					List<Storage> info = questionmap.get(doc.getQueryID());
 					Storage abc = new Storage(cos, ra, qid, rel, txt);
@@ -239,8 +253,9 @@ public class RetrievalEvaluator extends CasConsumer_ImplBase {
 		}
 	}
 
-	/**  According to the equation in the instruction of homework3, this function will return the value
-	 *	 after calculating.
+	/**
+	 * According to the equation in the instruction of homework3, this function
+	 * will return the value after calculating.
 	 * 
 	 * @return cosine_similarity
 	 */
@@ -283,7 +298,8 @@ public class RetrievalEvaluator extends CasConsumer_ImplBase {
 		return cosine_similarity;
 	}
 
-	/** This function is designed for Mean Reciprocal Rank based on the equation.
+	/**
+	 * This function is designed for Mean Reciprocal Rank based on the equation.
 	 * 
 	 * @return mrr
 	 */
@@ -303,11 +319,21 @@ public class RetrievalEvaluator extends CasConsumer_ImplBase {
 
 		return metric_mrr;
 	}
-	/** This function is designed for caculating Jaccard coefficient based on the equation.
+
+	/**
+	 * This function is designed for caculating Jaccard coefficient based on the
+	 * equation.
 	 * 
 	 * @return Jaccard index
 	 */
 	public double jc(String s, String t) {
+		StanfordLemmatizer k = new StanfordLemmatizer();
+		s = s.replaceAll("[" + ",;\".?':!" + "]+", "");
+		s = s.replace("-", "");
+		s = k.stemText(s);
+		t = t.replaceAll("[" + ",;\".?':!" + "]+", "");
+		t = t.replace("-", "");
+		t = k.stemText(t);
 		String[] sSplit = s.split(" ");
 		String[] tSplit = t.split(" ");
 
@@ -315,7 +341,8 @@ public class RetrievalEvaluator extends CasConsumer_ImplBase {
 		List<String> intersection = new ArrayList<String>();
 		for (int i = 0; i < sSplit.length; i++) {
 			for (int j = 0; j < tSplit.length; j++) {
-				if (!intersection.contains(sSplit[i])) // no duplicate
+				if (!intersection.contains(sSplit[i])
+						&& (!stopwords.contains(sSplit[i]))) // no duplicate
 					if (sSplit[i].equals(tSplit[j])) // has intersection
 					{
 						intersection.add(sSplit[i]);
@@ -329,37 +356,53 @@ public class RetrievalEvaluator extends CasConsumer_ImplBase {
 		if (sSplit.length > tSplit.length) // calculate big tupple first
 		{
 			for (int i = 0; i < sSplit.length; i++)
-				if (!union.contains(sSplit[i]))
+				if (!union.contains(sSplit[i])
+						&& (!stopwords.contains(sSplit[i])))
 					union.add(sSplit[i]);
 			for (int i = 0; i < tSplit.length; i++)
-				if (!union.contains(tSplit[i]))
+				if (!union.contains(tSplit[i])
+						&& (!stopwords.contains(tSplit[i])))
 					union.add(tSplit[i]);
 		} else {
 			for (int i = 0; i < tSplit.length; i++)
-				if (!union.contains(tSplit[i]))
+				if (!union.contains(tSplit[i])
+						&& (!stopwords.contains(tSplit[i])))
 					union.add(tSplit[i]);
 			for (int i = 0; i < sSplit.length; i++)
-				if (!union.contains(sSplit[i]))
+				if (!union.contains(sSplit[i])
+						&& (!stopwords.contains(sSplit[i])))
 					union.add(sSplit[i]);
 
 		}
 		return ((double) intersection.size()) / ((double) union.size());
 	}
-	/** This function is designed for caculating Tversky coefficient based on the equation.
+
+	/**
+	 * This function is designed for caculating Tversky coefficient based on the
+	 * equation.
 	 * 
 	 * @return Tversky index
 	 */
 	public double tversky(String s, String t) {
+
 		double abc = 0.0;
 		double Sum1 = 0.0;
 		double Sum2 = 0.0;
 		double intersectionSum = 0.0;
+		StanfordLemmatizer k = new StanfordLemmatizer();
+		s = s.replaceAll("[" + ",;\".?':!" + "]+", "");
+		s = s.replace("-", "");
+		s = k.stemText(s);
+		t = t.replaceAll("[" + ",;\".?':!" + "]+", "");
+		t = t.replace("-", "");
+		t = k.stemText(t);
 		String[] sSplit = s.split(" ");
 		String[] tSplit = t.split(" ");
 		List<String> intersection = new ArrayList<String>();
 		for (int i = 0; i < sSplit.length; i++) {
 			for (int j = 0; j < tSplit.length; j++) {
-				if (!intersection.contains(sSplit[i])) // no duplicate
+				if (!intersection.contains(sSplit[i])
+						&& (!stopwords.contains(sSplit[i]))) // no duplicate
 					if (sSplit[i].equals(tSplit[j])) // has intersection
 					{
 						Sum1 += Math.abs((i - j));
@@ -370,23 +413,35 @@ public class RetrievalEvaluator extends CasConsumer_ImplBase {
 			}
 		}
 		return (double) intersection.size()
-				/ (double) (intersection.size() + Sum2 + Sum1);
+				/ (double) (intersection.size() + Sum2+ Sum1);
 	}
-	/** This function is designed for caculating Dice coefficient based on the equation.
+
+	/**
+	 * This function is designed for caculating Dice coefficient based on the
+	 * equation.
 	 * 
 	 * @return Dice index
 	 */
 	public double dice(String s, String t) {
+
 		double abc = 0.0;
 		double Sum1 = 0.0;
 		double Sum2 = 0.0;
 		double intersectionSum = 0.0;
+		StanfordLemmatizer k = new StanfordLemmatizer();
+		s = s.replaceAll("[" + ",;\".?':!" + "]+", "");
+		s = s.replace("-", "");
+		s = k.stemText(s);
+		t = t.replaceAll("[" + ",;\".?':!" + "]+", "");
+		t = t.replace("-", "");
+		t = k.stemText(t);
 		String[] sSplit = s.split(" ");
 		String[] tSplit = t.split(" ");
 		List<String> intersection = new ArrayList<String>();
 		for (int i = 0; i < sSplit.length; i++) {
 			for (int j = 0; j < tSplit.length; j++) {
-				if (!intersection.contains(sSplit[i])) // no duplicate
+				if (!intersection.contains(sSplit[i])
+						&& (!stopwords.contains(sSplit[i]))) // no duplicate
 					if (sSplit[i].equals(tSplit[j])) // has intersection
 					{
 						Sum1 += Math.abs((i - j));
@@ -396,8 +451,21 @@ public class RetrievalEvaluator extends CasConsumer_ImplBase {
 					}
 			}
 		}
-		return (double) 2*intersection.size()
-				/ (sSplit.length+tSplit.length);
+		return (double) 2 * intersection.size()
+				/ (sSplit.length + tSplit.length);
 	}
 
+	public ArrayList<String> linereadfile(String sentence) throws Exception {
+
+		String line = null;
+		stopwords = new ArrayList<String>();
+		BufferedReader in = new BufferedReader(new FileReader(sentence));
+
+		while ((line = in.readLine().trim()) != null) {
+
+			stopwords.add(line);
+		}
+		in.close();
+		return stopwords;
+	}
 }

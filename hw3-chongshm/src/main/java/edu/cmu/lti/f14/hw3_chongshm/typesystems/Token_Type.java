@@ -14,7 +14,7 @@ import org.apache.uima.cas.Feature;
 import org.apache.uima.jcas.tcas.Annotation_Type;
 
 /** 
- * Updated by JCasGen Thu Oct 16 00:10:18 EDT 2014
+ * Updated by JCasGen Wed Oct 22 21:07:18 EDT 2014
  * @generated */
 public class Token_Type extends Annotation_Type {
   /** @generated */
